@@ -2,11 +2,20 @@ const chapterFolders = ["chapter1", "chapter2"];
 
 async function loadChapters() {
   const container = document.getElementById("chapters");
+  const nav = document.getElementById("chapter-nav");
 
   for (const folder of chapterFolders) {
     const info = await fetch(`chapters/${folder}/info.json`).then(r => r.json());
 
-    // Auto detect images from folder (works on GitHub Pages)
+    // Nav link with subtitle tooltip
+    const navLink = document.createElement("a");
+    navLink.href = `#${folder}`;
+    navLink.textContent = info.title;
+    navLink.className = "chapter-nav-link";
+    navLink.title = info.subtitle;
+    nav.appendChild(navLink);
+
+    // Auto detect images from folder
     const res = await fetch(`chapters/${folder}/`);
     const text = await res.text();
     const matches = [...text.matchAll(/href="([^"]+\.(jpg|jpeg|png|webp))"/g)];
@@ -14,6 +23,7 @@ async function loadChapters() {
 
     const card = document.createElement("div");
     card.className = "chapter-card";
+    card.id = folder;
 
     const slideshow = document.createElement("div");
     slideshow.className = "slideshow";
@@ -34,6 +44,7 @@ async function loadChapters() {
     container.appendChild(card);
   }
 
+  // Auto slideshow
   setInterval(() => {
     document.querySelectorAll(".slideshow").forEach(slideshow => {
       const imgs = slideshow.querySelectorAll("img");
