@@ -7,19 +7,12 @@ async function loadChapters() {
   for (const folder of chapterFolders) {
     const info = await fetch(`chapters/${folder}/info.json`).then(r => r.json());
 
-    // Nav link with subtitle tooltip
     const navLink = document.createElement("a");
     navLink.href = `#${folder}`;
     navLink.textContent = info.title;
-    navLink.className = "chapter-nav-link";
     navLink.title = info.subtitle;
+    navLink.className = "chapter-nav-link";
     nav.appendChild(navLink);
-
-    // Auto detect images from folder
-    const res = await fetch(`chapters/${folder}/`);
-    const text = await res.text();
-    const matches = [...text.matchAll(/href="([^"]+\.(jpg|jpeg|png|webp))"/g)];
-    const images = matches.map(m => m[1]);
 
     const card = document.createElement("div");
     card.className = "chapter-card";
@@ -28,9 +21,9 @@ async function loadChapters() {
     const slideshow = document.createElement("div");
     slideshow.className = "slideshow";
 
-    images.forEach((imgSrc, i) => {
+    info.images.forEach((imgFile, i) => {
       const img = document.createElement("img");
-      img.src = `chapters/${folder}/${imgSrc}`;
+      img.src = `chapters/${folder}/${imgFile}`;
       if (i === 0) img.classList.add("active");
       slideshow.appendChild(img);
     });
@@ -44,7 +37,6 @@ async function loadChapters() {
     container.appendChild(card);
   }
 
-  // Auto slideshow
   setInterval(() => {
     document.querySelectorAll(".slideshow").forEach(slideshow => {
       const imgs = slideshow.querySelectorAll("img");
