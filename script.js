@@ -4,16 +4,14 @@ async function loadChapters() {
   const container = document.getElementById("chapters");
 
   for (const folder of chapterFolders) {
-    // Fetch chapter info
     const info = await fetch(`chapters/${folder}/info.json`).then(r => r.json());
 
-    // Fetch folder content (works on GitHub Pages)
+    // Auto detect images from folder (works on GitHub Pages)
     const res = await fetch(`chapters/${folder}/`);
     const text = await res.text();
     const matches = [...text.matchAll(/href="([^"]+\.(jpg|jpeg|png|webp))"/g)];
     const images = matches.map(m => m[1]);
 
-    // Create chapter card
     const card = document.createElement("div");
     card.className = "chapter-card";
 
@@ -36,7 +34,6 @@ async function loadChapters() {
     container.appendChild(card);
   }
 
-  // Auto slideshow
   setInterval(() => {
     document.querySelectorAll(".slideshow").forEach(slideshow => {
       const imgs = slideshow.querySelectorAll("img");
