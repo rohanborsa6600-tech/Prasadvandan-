@@ -1,51 +1,58 @@
-const chapterFolders = ["chapter1", "chapter2"];
+// Dynamically load chapters
+const chapters = ['chapter1', 'chapter2'];
+const container = document.getElementById('chapters-container');
 
-async function loadChapters() {
-  const container = document.getElementById("chapters");
-  const nav = document.getElementById("chapter-nav");
+chapters.forEach(chapter => {
+    loadChapter(chapter);
+});
 
-  for (const folder of chapterFolders) {
-    const info = await fetch(`chapters/${folder}/info.json`).then(r => r.json());
+async function loadChapter(chapterName) {
+    try {
+        const response = await fetch(`chapters/${chapterName}/info.json`);
+        if (!response.ok) throw new Error('Info not found');
+        const info = await response.json();
 
-    const navLink = document.createElement("a");
-    navLink.href = `#${folder}`;
-    navLink.textContent = info.title;
-    navLink.title = info.subtitle;
-    navLink.className = "chapter-nav-link";
-    nav.appendChild(navLink);
+        // Create chapter element
+        const chapterDiv = document.createElement('div');
+        chapterDiv.className = 'chapter';
+        chapterDiv.innerHTML = `
+            <h2>${info.title}</h2>
+            <p>${info.description}</p>
+        `;
 
-    const card = document.createElement("div");
-    card.className = "chapter-card";
-    card.id = folder;
+        // Create gallery
+        const gallery = document.createElement('div');
+        gallery.className = 'gallery';
 
-    const slideshow = document.createElement("div");
-    slideshow.className = "slideshow";
+        // Dynamically load photos (assumes sequential naming; stops on 404)
+        let photoCount = 1;
+        while (true) {
+            try {
+                const imgResponse = await fetch(`chapters/${chapterName}/photo${photoCount}.jpg`);
+                if (!imgResponse.ok) break;
+                const img = document.createElement('img');
+                img.src = `chapters/${chapterName}/photo${photoCount}.jpg`;
+                img.alt = `Photo ${photoCount} from ${info.title}`;
+                gallery.appendChild(img);
+                photoCount++;
+            } catch (e) {
+                break; // Stop on missing photo
+            }
+        }
 
-    info.images.forEach((imgFile, i) => {
-      const img = document.createElement("img");
-      img.src = `chapters/${folder}/${imgFile}`;
-      if (i === 0) img.classList.add("active");
-      slideshow.appendChild(img);
-    });
+        if (gallery.children.length === 0) {
+            gallery.innerHTML = '<p>No photos available.</p>';
+        }
 
-    const infoDiv = document.createElement("div");
-    infoDiv.className = "chapter-info";
-    infoDiv.innerHTML = `<h2>${info.title}</h2><p>${info.subtitle}</p>`;
-
-    card.appendChild(slideshow);
-    card.appendChild(infoDiv);
-    container.appendChild(card);
-  }
-
-  setInterval(() => {
-    document.querySelectorAll(".slideshow").forEach(slideshow => {
-      const imgs = slideshow.querySelectorAll("img");
-      const active = slideshow.querySelector("img.active");
-      let next = active.nextElementSibling || imgs[0];
-      active.classList.remove("active");
-      next.classList.add("active");
-    });
-  }, 3000);
+        chapterDiv.appendChild(gallery);
+        container.appendChild(chapterDiv);
+    } catch (error) {
+        console.error(`Error loading ${chapterName}:`, error);
+        container.innerHTML += `<p>Error loading Chapter ${chapterName.slice(-1)}.</p>`;
+    }
 }
 
-loadChapters();
+// Fallback: If fetch fails (e.g., file:// protocol), show static message
+if (typeof fetch === 'undefined') {
+    container.innerHTML = '<p>Please serve the site via a local server (e.g., Python: python -m http.server) for dynamic loading.</p>';
+}
