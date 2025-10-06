@@ -1,19 +1,26 @@
+const chapterFolders = ["chapter1", "chapter2"];
+
 async function loadChapters() {
   const container = document.getElementById("chapters");
-  
-  // Manually list folders (or fetch dynamically from server)
-  const chapterFolders = ["chapter1", "chapter2"];
 
   for (const folder of chapterFolders) {
+    // Fetch chapter info
     const info = await fetch(`chapters/${folder}/info.json`).then(r => r.json());
 
+    // Fetch folder content (works on GitHub Pages)
+    const res = await fetch(`chapters/${folder}/`);
+    const text = await res.text();
+    const matches = [...text.matchAll(/href="([^"]+\.(jpg|jpeg|png|webp))"/g)];
+    const images = matches.map(m => m[1]);
+
+    // Create chapter card
     const card = document.createElement("div");
     card.className = "chapter-card";
 
     const slideshow = document.createElement("div");
     slideshow.className = "slideshow";
 
-    info.images.forEach((imgSrc, i) => {
+    images.forEach((imgSrc, i) => {
       const img = document.createElement("img");
       img.src = `chapters/${folder}/${imgSrc}`;
       if (i === 0) img.classList.add("active");
